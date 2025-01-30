@@ -41,8 +41,12 @@ sudo apt-get install -y mongodb-org=7.0.6 mongodb-org-database=7.0.6 mongodb-org
 
 reverse proxy
 To reverse proxy:
-1. sudo nano /etc/nginx/sites-available/default
-2. Then change the "try_files $uri $uri/ =404;" with proxy_pass:https(local host number)
+1. `sudo nano /etc/nginx/sites-available/default`
+2. Then change the 
+   ```
+   try_files $uri $uri/ =404;
+   ``` 
+   with proxy_pass:https//127
 3. Then save and exit and open a new terminal to ssh in and load the posts without the :3000
 
 

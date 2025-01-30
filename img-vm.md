@@ -19,6 +19,9 @@
 * On the advanced section of the VM input the bash scipt in the user data section.
 
 
+use Sudo -E for the sudo to access the environmental variable/ only need to use this if you dont have permissions to the file usally when you use a different user then the file is used to.
+
+
 
 
 
