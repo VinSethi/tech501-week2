@@ -23,6 +23,7 @@
 # Steps to create the 3 subnet Architecture 
 ## Step 1 - Create the Virtual network 
 * Name the virtual network "tech501-vineet-3-subnet-vnet"
+* Make sure you create a new one everytime for a new project
 * Create a public subnet with a starting address of 10.0.2.0
 * Create the DMZ subnet with a starting address of 10.0.3.0
 * Create a private subnet with a starting address of 10.0.4.0
@@ -34,6 +35,7 @@
 * On networking tab, make sure to select the 3 subnet network
 * Select the private subnet
 * Change public IP to 'none'
+* ![Screenshot of creating the DB VM](<Screenshot 2025-02-03 105447.png>)
 
 ## Step 3- Create the App VM
 * Keep the setting the same as per usual, change to the ones that are below
@@ -41,10 +43,11 @@
 * On networking tab select the 3 subnet network
 * Select the public subnet 
 * On advanced tab input the user data- change the export method to the ip address of the sparta app db
+![Screenshot of creating an app vm](<Screenshot 2025-02-03 110517.png>)
 
 ## Step 4- Checking if the App VM talking to DB VM
 * SSH into the App vm 
-* Input `ping 10.0.4.4` to talk to the DB VM
+* Input `ping 10.0.4.4` to talk to the DB VM- allows you to keep a track of things and see if it works
 
 ## Step 5- Create the NVA VM
 * Name it tech501-vineet-in-3-subnet-sparta-app-nva
@@ -76,7 +79,63 @@
 4. Then uncomment out `net.ipv4.conf.all.forwarding` and then save and exit
 5. Input `sudo sysctl -p`
 6. Then nano using this code `nano congig-ip-tables.sh`
-7. Copy the code into there that is in the chat provided by trainer
+7. Copy this code into the nano file:
+   #!/bin/bash
+ 
+# configure iptables
+ 
+echo "Configuring iptables..."
+ 
+#ADD COMMENT ABOUT WHAT THE FOLLOWING COMMAND(S) DO
+sudo iptables -A INPUT -i lo -j ACCEPT
+sudo iptables -A OUTPUT -o lo -j ACCEPT
+ 
+#ADD COMMENT ABOUT WHAT THE FOLLOWING COMMAND(S) DO
+sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+ 
+#ADD COMMENT ABOUT WHAT THE FOLLOWING COMMAND(S) DO
+sudo iptables -A OUTPUT -m state --state ESTABLISHED -j ACCEPT
+ 
+#ADD COMMENT ABOUT WHAT THE FOLLOWING COMMAND(S) DO
+sudo iptables -A INPUT -m state --state INVALID -j DROP
+ 
+#ADD COMMENT ABOUT WHAT THE FOLLOWING COMMAND(S) DO
+sudo iptables -A INPUT -p tcp --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+sudo iptables -A OUTPUT -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT
+ 
+#uncomment the following lines if want allow SSH into NVA only through the public subnet (app VM as a jumpbox)
+#this must be done once the NVA's public IP address is removed
+#sudo iptables -A INPUT -p tcp -s 10.0.2.0/24 --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+#sudo iptables -A OUTPUT -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT
+ 
+#uncomment the following lines if want allow SSH to other servers using the NVA as a jumpbox
+#if need to make outgoing SSH connections with other servers from NVA
+#sudo iptables -A OUTPUT -p tcp --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+#sudo iptables -A INPUT -p tcp --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+ 
+#ADD COMMENT ABOUT WHAT THE FOLLOWING COMMAND(S) DO
+sudo iptables -A FORWARD -p tcp -s 10.0.2.0/24 -d 10.0.4.0/24 --destination-port 27017 -m tcp -j ACCEPT
+ 
+#ADD COMMENT ABOUT WHAT THE FOLLOWING COMMAND(S) DO
+sudo iptables -A FORWARD -p icmp -s 10.0.2.0/24 -d 10.0.4.0/24 -m state --state NEW,ESTABLISHED -j ACCEPT
+ 
+#ADD COMMENT ABOUT WHAT THE FOLLOWING COMMAND(S) DO
+sudo iptables -P INPUT DROP
+ 
+#ADD COMMENT ABOUT WHAT THE FOLLOWING COMMAND(S) DO
+sudo iptables -P FORWARD DROP
+ 
+echo "Done!"
+echo ""
+ 
+#make iptables rules persistent
+#it will ask for user input by default
+ 
+echo "Make iptables rules persistent..."
+sudo DEBIAN_FRONTEND=noninteractive apt install iptables-persistent -y
+echo "Done!"
+echo ""
+``` 
 8. Run `./config-ip-tables.sh` - this will now filter the traffic to DB VM 
 9. Post page should still now be working
 
