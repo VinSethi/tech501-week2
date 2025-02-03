@@ -81,8 +81,8 @@
 6. Then nano using this code `nano congig-ip-tables.sh`
 7. Copy this code into the nano file:
    #!/bin/bash
- 
-# configure iptables
+```
+#configure iptables
  
 echo "Configuring iptables..."
  
